@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>THERMEX - Temperature Converter</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;900&family=Crimson+Pro:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet"/>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    body{min-height:100vh;background:linear-gradient(135deg,#0f0c29 0%,#1a0a2e 30%,#0c1445 60%,#0f2027 100%);display:flex;align-items:center;justify-content:center;font-family:'Georgia',serif;overflow-x:hidden;padding:20px;position:relative;}
+    .orb{position:fixed;border-radius:50%;pointer-events:none;z-index:0;}
+    .orb1{top:-10%;left:-10%;width:50vw;height:50vw;background:radial-gradient(circle,rgba(249,115,22,0.2) 0%,transparent 70%);animation:orb1 8s ease-in-out infinite alternate;}
+    .orb2{bottom:-10%;right:-10%;width:55vw;height:55vw;background:radial-gradient(circle,rgba(96,165,250,0.2) 0%,transparent 70%);animation:orb2 10s ease-in-out infinite alternate;}
+    .orb3{top:40%;left:50%;width:30vw;height:30vw;background:radial-gradient(circle,rgba(168,85,247,0.12) 0%,transparent 70%);transform:translate(-50%,-50%);animation:orb3 6s ease-in-out infinite alternate;}
+    .particle{position:fixed;bottom:-20px;border-radius:50%;pointer-events:none;filter:blur(1.5px);z-index:1;}
+    .particle.fire{background:radial-gradient(circle,#fbbf24,#f97316,transparent);}
+    .particle.ice{background:radial-gradient(circle,#bfdbfe,#60a5fa,transparent);}
+    .particle.plasma{background:radial-gradient(circle,#e879f9,#a855f7,transparent);}
+    .side-deco{position:fixed;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;align-items:center;gap:14px;z-index:2;pointer-events:none;}
+    .side-deco.left{left:24px;}.side-deco.right{right:24px;}
+    .sd-line{width:1.5px;height:60px;background:linear-gradient(to bottom,transparent,rgba(249,115,22,0.5),rgba(96,165,250,0.5),transparent);animation:linePulse 3s ease-in-out infinite;}
+    .sd-dot{width:7px;height:7px;border-radius:50%;}
+    .sd-dot.f{background:#f97316;box-shadow:0 0 10px #f97316;animation:dotPulse 2s ease-in-out infinite 0s;}
+    .sd-dot.i{background:#60a5fa;box-shadow:0 0 10px #60a5fa;animation:dotPulse 2s ease-in-out infinite 0.6s;}
+    .sd-dot.p{background:#a855f7;box-shadow:0 0 10px #a855f7;animation:dotPulse 2s ease-in-out infinite 1.2s;}
+    .sd-ring{width:20px;height:20px;border-radius:50%;border:1.5px solid rgba(249,115,22,0.4);animation:ringPulse 4s ease-in-out infinite;}
+    .sd-ring.blue{border-color:rgba(96,165,250,0.4);animation-delay:1s;}
+    .sd-ring.purple{border-color:rgba(168,85,247,0.4);animation-delay:2s;}
+    .sd-txt{font-family:'Cinzel',serif;font-size:0.5rem;letter-spacing:2px;writing-mode:vertical-rl;color:rgba(255,255,255,0.18);text-transform:uppercase;animation:shimmer 4s ease-in-out infinite;}
+    .wrapper{display:flex;flex-direction:column;align-items:center;gap:0;width:100%;max-width:480px;position:relative;z-index:10;}
+    .card{width:100%;background:rgba(255,255,255,0.04);backdrop-filter:blur(24px);border:1px solid rgba(255,255,255,0.10);border-radius:28px;padding:40px 36px 32px;box-shadow:0 30px 80px rgba(0,0,0,0.5),inset 0 1px 0 rgba(255,255,255,0.12);animation:cardIn 0.7s cubic-bezier(0.16,1,0.3,1) both;position:relative;}
+    .dots-btn{position:absolute;top:18px;right:18px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:8px;width:34px;height:34px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.2s;z-index:100;flex-direction:column;gap:3px;}
+    .dots-btn:hover{background:rgba(255,255,255,0.12);border-color:rgba(255,255,255,0.25);box-shadow:0 0 14px rgba(249,115,22,0.2);}
+    .dots-btn span{width:4px;height:4px;background:rgba(255,255,255,0.7);border-radius:50%;display:block;transition:all 0.2s;}
+    .dots-btn:hover span{background:white;}
+    .dropdown{position:absolute;top:58px;right:18px;background:rgba(15,12,41,0.97);backdrop-filter:blur(24px);border:1px solid rgba(255,255,255,0.12);border-radius:16px;width:270px;box-shadow:0 20px 60px rgba(0,0,0,0.6);z-index:200;overflow:hidden;display:none;animation:fadeUp 0.25s ease both;}
+    .dropdown.open{display:block;}
+    .dd-header{padding:14px 16px 10px;border-bottom:1px solid rgba(255,255,255,0.07);}
+    .dd-title{font-family:'Cinzel',serif;font-size:0.65rem;letter-spacing:3px;color:rgba(255,255,255,0.5);text-transform:uppercase;}
+    .dd-section{padding:10px 8px;border-bottom:1px solid rgba(255,255,255,0.06);}
+    .dd-section:last-child{border-bottom:none;}
+    .dd-sec-title{font-family:'Cinzel',serif;font-size:0.55rem;letter-spacing:2px;color:rgba(255,255,255,0.3);text-transform:uppercase;padding:0 8px;margin-bottom:6px;}
+    .dd-item{display:flex;align-items:center;gap:10px;padding:10px;border-radius:10px;cursor:pointer;transition:all 0.18s;}
+    .dd-item:hover{background:rgba(255,255,255,0.07);}
+    .dd-ico{font-size:1rem;width:22px;text-align:center;flex-shrink:0;}
+    .dd-lbl{font-family:'Cinzel',serif;font-size:0.7rem;color:rgba(255,255,255,0.75);letter-spacing:1px;}
+    .dd-desc{font-family:'Crimson Pro',serif;font-size:0.7rem;color:rgba(255,255,255,0.3);font-style:italic;margin-top:1px;}
+    .sub-panel{display:none;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:16px;padding:18px 20px;margin-top:12px;width:100%;animation:fadeUp 0.3s ease both;}
+    .sub-panel.show{display:block;}
+    .sp-title{font-family:'Cinzel',serif;font-size:0.62rem;letter-spacing:3px;color:rgba(255,255,255,0.45);text-transform:uppercase;margin-bottom:14px;}
+    .fp-row{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;margin-bottom:8px;transition:all 0.2s;}
+    .fp-row:last-child{margin-bottom:0;}
+    .fp-row:hover{transform:translateX(4px);}
+    .fp-row.fc{background:rgba(96,165,250,0.08);border:1px solid rgba(96,165,250,0.15);}
+    .fp-row.ff{background:rgba(249,115,22,0.08);border:1px solid rgba(249,115,22,0.15);}
+    .fp-row.fk{background:rgba(168,85,247,0.08);border:1px solid rgba(168,85,247,0.15);}
+    .fp-lbl{font-family:'Cinzel',serif;font-size:0.62rem;font-weight:700;width:80px;flex-shrink:0;}
+    .fp-lbl.cc{color:#93c5fd;} .fp-lbl.cf{color:#fdba74;} .fp-lbl.ck{color:#c084fc;}
+    .fp-formula{font-family:'Crimson Pro',serif;font-size:0.82rem;color:rgba(255,255,255,0.65);font-style:italic;}
+    .hp-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+    .hp-clr{background:transparent;border:1px solid rgba(239,68,68,0.2);border-radius:6px;color:rgba(239,68,68,0.45);font-family:'Cinzel',serif;font-size:0.55rem;letter-spacing:1px;padding:5px 10px;cursor:pointer;transition:all 0.2s;text-transform:uppercase;}
+    .hp-clr:hover{border-color:rgba(239,68,68,0.5);color:#fca5a5;}
+    .hp-list{max-height:200px;overflow-y:auto;display:flex;flex-direction:column;gap:7px;}
+    .hp-list::-webkit-scrollbar{width:3px;}
+    .hp-list::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:10px;}
+    .hp-empty{text-align:center;padding:18px 0;color:rgba(255,255,255,0.2);font-family:'Crimson Pro',serif;font-style:italic;font-size:0.82rem;}
+    .hp-item{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);border-radius:9px;padding:9px 12px;cursor:pointer;transition:all 0.2s;}
+    .hp-item:hover{background:rgba(255,255,255,0.08);transform:translateX(3px);}
+    .hp-from{font-family:'Cinzel',serif;font-size:0.7rem;font-weight:700;color:white;margin-bottom:2px;}
+    .hp-to{font-family:'Crimson Pro',serif;font-size:0.7rem;color:rgba(255,255,255,0.42);line-height:1.6;}
+    .hp-time{font-family:'Crimson Pro',serif;font-size:0.6rem;color:rgba(255,255,255,0.18);margin-top:3px;font-style:italic;}
+    .fact-row{padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.05);display:flex;gap:12px;align-items:flex-start;}
+    .fact-row:last-child{border-bottom:none;padding-bottom:0;}
+    .fact-ico{font-size:1.1rem;flex-shrink:0;margin-top:1px;}
+    .fact-txt{font-family:'Crimson Pro',serif;font-size:0.82rem;color:rgba(255,255,255,0.55);line-height:1.6;}
+    .fact-txt strong{color:rgba(255,255,255,0.85);}
+    .header{text-align:center;margin-bottom:30px;}
+    .h-emoji{font-size:2.5rem;display:block;margin-bottom:6px;filter:drop-shadow(0 0 18px rgba(249,115,22,0.8));animation:floatIcon 3s ease-in-out infinite;}
+    .h-title{font-family:'Cinzel',serif;font-weight:900;font-size:1.8rem;letter-spacing:6px;background:linear-gradient(90deg,#f97316,#fbbf24,#60a5fa,#818cf8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;text-transform:uppercase;}
+    .h-sub{font-family:'Crimson Pro',serif;font-style:italic;color:rgba(255,255,255,0.5);font-size:0.88rem;letter-spacing:3px;margin-top:5px;}
+    .h-line{height:1px;margin-top:18px;background:linear-gradient(90deg,transparent,rgba(249,115,22,0.6),rgba(96,165,250,0.6),transparent);}
+    .lbl{display:block;font-family:'Cinzel',serif;font-size:0.62rem;letter-spacing:3px;color:rgba(255,255,255,0.55);text-transform:uppercase;margin-bottom:10px;}
+    .unit-row{display:flex;gap:8px;margin-bottom:22px;}
+    .ubtn{flex:1;padding:11px 4px;border-radius:10px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.03);color:rgba(255,255,255,0.55);cursor:pointer;font-family:'Cinzel',serif;font-size:0.82rem;letter-spacing:1px;font-weight:600;transition:all 0.22s;}
+    .ubtn:hover{color:white;background:rgba(255,255,255,0.08);border-color:rgba(255,255,255,0.25);transform:translateY(-2px);}
+    .ubtn.ac{background:rgba(96,165,250,0.18);color:#93c5fd;border-color:rgba(96,165,250,0.5);box-shadow:0 0 18px rgba(96,165,250,0.2);text-shadow:0 0 10px rgba(96,165,250,0.7);font-weight:700;}
+    .ubtn.af{background:rgba(249,115,22,0.18);color:#fdba74;border-color:rgba(249,115,22,0.5);box-shadow:0 0 18px rgba(249,115,22,0.2);text-shadow:0 0 10px rgba(249,115,22,0.7);font-weight:700;}
+    .ubtn.ak{background:rgba(168,85,247,0.18);color:#c084fc;border-color:rgba(168,85,247,0.5);box-shadow:0 0 18px rgba(168,85,247,0.2);text-shadow:0 0 10px rgba(168,85,247,0.7);font-weight:700;}
+    .inp-wrap{position:relative;margin-bottom:8px;}
+    .inp{width:100%;padding:15px 52px 15px 18px;background:rgba(255,255,255,0.07);border-radius:13px;color:white;font-size:1.1rem;font-family:'Crimson Pro',serif;outline:none;transition:border-color 0.2s,box-shadow 0.2s;}
+    .inp::placeholder{color:rgba(255,255,255,0.25);}
+    .inp.bc{border:1.5px solid rgba(96,165,250,0.45);}
+    .inp.bc:focus{box-shadow:0 0 0 3px rgba(96,165,250,0.12);}
+    .inp.bf{border:1.5px solid rgba(249,115,22,0.45);}
+    .inp.bf:focus{box-shadow:0 0 0 3px rgba(249,115,22,0.12);}
+    .inp.bk{border:1.5px solid rgba(168,85,247,0.45);}
+    .inp.bk:focus{box-shadow:0 0 0 3px rgba(168,85,247,0.12);}
+    .inp.err{border-color:#ef4444!important;box-shadow:0 0 0 3px rgba(239,68,68,0.15)!important;animation:shake 0.4s ease;}
+    .badge{position:absolute;right:16px;top:50%;transform:translateY(-50%);font-family:'Cinzel',serif;font-weight:700;font-size:1rem;pointer-events:none;}
+    .badge.gc{color:#93c5fd;filter:drop-shadow(0 0 6px #60a5fa);}
+    .badge.gf{color:#fdba74;filter:drop-shadow(0 0 6px #f97316);}
+    .badge.gk{color:#c084fc;filter:drop-shadow(0 0 6px #a855f7);}
+    .errmsg{color:#fca5a5;font-family:'Crimson Pro',serif;font-style:italic;font-size:0.83rem;margin:6px 0 14px 4px;display:none;}
+    .cvt-btn{width:100%;padding:15px;border:none;border-radius:14px;background:linear-gradient(135deg,#f97316,#ef4444,#b45309);color:white;font-family:'Cinzel',serif;font-weight:700;font-size:1rem;letter-spacing:3px;text-transform:uppercase;cursor:pointer;position:relative;overflow:hidden;box-shadow:0 4px 28px rgba(249,115,22,0.5);transition:transform 0.18s,box-shadow 0.18s,filter 0.18s;margin-bottom:12px;margin-top:14px;}
+    .cvt-btn::before{content:'';position:absolute;top:0;left:-100%;width:100%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.22),transparent);transition:left 0.45s;}
+    .cvt-btn:hover::before{left:100%;}
+    .cvt-btn:hover{transform:translateY(-3px) scale(1.02);box-shadow:0 8px 38px rgba(249,115,22,0.65);filter:brightness(1.1);}
+    .cvt-btn:active{transform:scale(0.98);}
+    .rst-btn{display:block;margin:0 auto 22px;background:transparent;border:1px solid rgba(255,255,255,0.18);border-radius:10px;color:rgba(255,255,255,0.5);font-family:'Cinzel',serif;font-size:0.7rem;letter-spacing:2px;padding:9px 22px;cursor:pointer;transition:all 0.22s;text-transform:uppercase;}
+    .rst-btn:hover{border-color:rgba(96,165,250,0.6);color:#93c5fd;background:rgba(96,165,250,0.08);}
+    .results{display:none;}
+    .results.show{display:block;animation:fadeUp 0.4s ease both;}
+    .r-divider{height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.12),transparent);margin-bottom:14px;}
+    .r-label{font-family:'Cinzel',serif;font-size:0.6rem;letter-spacing:3px;color:rgba(255,255,255,0.45);text-transform:uppercase;margin-bottom:12px;}
+    .r-row{display:flex;gap:10px;}
+    .rcard{flex:1;border-radius:13px;padding:14px;transition:transform 0.2s;animation:fadeUp 0.4s ease both;}
+    .rcard:hover{transform:translateY(-3px);}
+    .rcard.rc{background:rgba(96,165,250,0.13);border:1px solid rgba(96,165,250,0.22);box-shadow:0 4px 20px rgba(96,165,250,0.12);}
+    .rcard.rf{background:rgba(249,115,22,0.13);border:1px solid rgba(249,115,22,0.22);box-shadow:0 4px 20px rgba(249,115,22,0.12);}
+    .rcard.rk{background:rgba(168,85,247,0.13);border:1px solid rgba(168,85,247,0.22);box-shadow:0 4px 20px rgba(168,85,247,0.12);}
+    .r-unit{font-family:'Cinzel',serif;font-size:0.52rem;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px;}
+    .r-unit.cc{color:#93c5fd;text-shadow:0 0 8px rgba(96,165,250,0.7);}
+    .r-unit.cf{color:#fdba74;text-shadow:0 0 8px rgba(249,115,22,0.7);}
+    .r-unit.ck{color:#c084fc;text-shadow:0 0 8px rgba(168,85,247,0.7);}
+    .r-top{display:flex;align-items:center;justify-content:space-between;}
+    .r-val{font-family:'Cinzel',serif;font-weight:900;font-size:1.4rem;color:white;line-height:1;}
+    .r-val.cc{text-shadow:0 0 14px rgba(96,165,250,0.5);}
+    .r-val.cf{text-shadow:0 0 14px rgba(249,115,22,0.5);}
+    .r-val.ck{text-shadow:0 0 14px rgba(168,85,247,0.5);}
+    .r-sym{font-size:0.85rem;margin-left:2px;}
+    .r-sym.cc{color:#93c5fd;} .r-sym.cf{color:#fdba74;} .r-sym.ck{color:#c084fc;}
+    .r-ico{font-size:1.3rem;}
+    .toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%) translateY(20px);background:rgba(15,12,41,0.95);border:1px solid rgba(255,255,255,0.12);border-radius:12px;padding:12px 22px;font-family:'Cinzel',serif;font-size:0.7rem;letter-spacing:2px;color:rgba(255,255,255,0.8);z-index:999;opacity:0;transition:all 0.3s;pointer-events:none;white-space:nowrap;}
+    .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+    @keyframes orb1{from{transform:translate(0,0) scale(1);}to{transform:translate(5vw,5vh) scale(1.15);}}
+    @keyframes orb2{from{transform:translate(0,0) scale(1);}to{transform:translate(-5vw,-5vh) scale(1.1);}}
+    @keyframes orb3{from{transform:translate(-50%,-50%) scale(1);}to{transform:translate(-50%,-50%) scale(1.2);}}
+    @keyframes float{0%{transform:translateY(0) scale(1);opacity:0.55;}50%{opacity:0.85;}100%{transform:translateY(-100vh) scale(0.2);opacity:0;}}
+    @keyframes cardIn{from{opacity:0;transform:translateY(36px) scale(0.97);}to{opacity:1;transform:translateY(0) scale(1);}}
+    @keyframes fadeUp{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:translateY(0);}}
+    @keyframes shake{0%,100%{transform:translateX(0);}20%{transform:translateX(-7px);}40%{transform:translateX(7px);}60%{transform:translateX(-5px);}80%{transform:translateX(5px);}}
+    @keyframes floatIcon{0%,100%{transform:translateY(0);}50%{transform:translateY(-5px);}}
+    @keyframes shimmer{0%,100%{opacity:0.2;}50%{opacity:0.6;}}
+    @keyframes linePulse{0%,100%{opacity:0.25;}50%{opacity:0.75;}}
+    @keyframes dotPulse{0%,100%{transform:scale(1);opacity:0.5;}50%{transform:scale(1.5);opacity:1;}}
+    @keyframes ringPulse{0%,100%{transform:scale(1);opacity:0.25;}50%{transform:scale(1.25);opacity:0.65;}}
+    @media(max-width:600px){.side-deco{display:none;}.r-row{flex-direction:column;}.card{padding:32px 22px 26px;}.dropdown{width:240px;}}
+  </style>
+</head>
+<body>
+  <div class="orb orb1"></div>
+  <div class="orb orb2"></div>
+  <div class="orb orb3"></div>
+  <div class="side-deco left"><div class="sd-txt">THERMEX</div><div class="sd-line"></div><div class="sd-dot f"></div><div class="sd-ring"></div><div class="sd-dot i"></div><div class="sd-ring blue"></div><div class="sd-dot p"></div><div class="sd-ring purple"></div><div class="sd-line"></div><div class="sd-txt">°C °F K</div></div>
+  <div class="side-deco right"><div class="sd-txt">FIRE·ICE</div><div class="sd-line"></div><div class="sd-dot p"></div><div class="sd-ring purple"></div><div class="sd-dot f"></div><div class="sd-ring"></div><div class="sd-dot i"></div><div class="sd-ring blue"></div><div class="sd-line"></div><div class="sd-txt">PLASMA</div></div>
+  <div class="wrapper">
+    <div class="card">
+      <div class="dots-btn" id="dotsBtn" onclick="toggleMenu()"><span></span><span></span><span></span></div>
+      <div class="dropdown" id="dropdown">
+        <div class="dd-header"><div class="dd-title">⚙ Options</div></div>
+        <div class="dd-section">
+          <div class="dd-sec-title">Tools</div>
+          <div class="dd-item" onclick="togglePanel('formula')"><div class="dd-ico">📐</div><div><div class="dd-lbl">Formulas</div><div class="dd-desc">All conversion formulas</div></div></div>
+          <div class="dd-item" onclick="togglePanel('history')"><div class="dd-ico">⏱</div><div><div class="dd-lbl">History</div><div class="dd-desc">Recent conversions</div></div></div>
+          <div class="dd-item" onclick="togglePanel('facts')"><div class="dd-ico">🌡️</div><div><div class="dd-lbl">Fun Facts</div><div class="dd-desc">Temperature records & facts</div></div></div>
+        </div>
+        <div class="dd-section">
+          <div class="dd-sec-title">Actions</div>
+          <div class="dd-item" onclick="copyResult()"><div class="dd-ico">📋</div><div><div class="dd-lbl">Copy Result</div><div class="dd-desc">Copy converted values</div></div></div>
+          <div class="dd-item" onclick="doReset();closeMenu();"><div class="dd-ico">↺</div><div><div class="dd-lbl">Reset All</div><div class="dd-desc">Clear input and results</div></div></div>
+        </div>
+      </div>
+      <div class="header">
+        <span class="h-emoji">🌡️</span>
+        <div class="h-title">THERMEX</div>
+        <div class="h-sub">Fire · Ice · Plasma</div>
+        <div class="h-line"></div>
+      </div>
+      <span class="lbl">Convert From</span>
+      <div class="unit-row">
+        <button class="ubtn ac" id="btnC" onclick="selectUnit('C')">°C <span style="font-size:0.63rem;opacity:0.75">Celsius</span></button>
+        <button class="ubtn" id="btnF" onclick="selectUnit('F')">°F <span style="font-size:0.63rem;opacity:0.75">Fahrenheit</span></button>
+        <button class="ubtn" id="btnK" onclick="selectUnit('K')">K <span style="font-size:0.63rem;opacity:0.75">Kelvin</span></button>
+      </div>
+      <span class="lbl">Temperature Value</span>
+      <div class="inp-wrap">
+        <input class="inp bc" id="inp" type="text" placeholder="Enter Celsius value…"/>
+        <span class="badge gc" id="badge">°C</span>
+      </div>
+      <p class="errmsg" id="errmsg"></p>
+      <button class="cvt-btn" onclick="doConvert()">⚡ CONVERT</button>
+      <button class="rst-btn" onclick="doReset()">↺ Reset</button>
+      <div class="results" id="results">
+        <div class="r-divider"></div>
+        <p class="r-label">Converted Results</p>
+        <div class="r-row" id="rcards"></div>
+      </div>
+    </div>
+    <!-- FORMULA PANEL -->
+    <div class="sub-panel" id="formulaPanel">
+      <div class="sp-title">📐 Conversion Formulas</div>
+      <div class="fp-row fc"><div class="fp-lbl cc">°F → °C</div><div class="fp-formula">(°F − 32) × 5 ÷ 9 = °C</div></div>
+      <div class="fp-row ff"><div class="fp-lbl cf">°C → °F</div><div class="fp-formula">(°C × 9 ÷ 5) + 32 = °F</div></div>
+      <div class="fp-row fk"><div class="fp-lbl ck">°C → K</div><div class="fp-formula">°C + 273.15 = K</div></div>
+      <div class="fp-row fc"><div class="fp-lbl cc">K → °C</div><div class="fp-formula">K − 273.15 = °C</div></div>
+      <div class="fp-row ff"><div class="fp-lbl cf">°F → K</div><div class="fp-formula">(°F − 32) × 5/9 + 273.15 = K</div></div>
+      <div class="fp-row fk"><div class="fp-lbl ck">K → °F</div><div class="fp-formula">(K − 273.15) × 9/5 + 32 = °F</div></div>
+    </div>
+    <!-- HISTORY PANEL -->
+    <div class="sub-panel" id="histPanel">
+      <div class="hp-head">
+        <div class="sp-title" style="margin-bottom:0">⏱ Conversion History</div>
+        <button class="hp-clr" onclick="clearHist()">✕ Clear</button>
+      </div>
+      <div class="hp-list" id="hlist"><div class="hp-empty">No conversions yet. Start converting! 🌡️</div></div>
+    </div>
+    <!-- FACTS PANEL -->
+    <div class="sub-panel" id="factsPanel">
+      <div class="sp-title">🌡️ Temperature Fun Facts</div>
+      <div class="fact-row"><div class="fact-ico">🥶</div><div class="fact-txt"><strong>Absolute Zero</strong> is 0 K = −273.15°C = −459.67°F. Nothing can be colder than this!</div></div>
+      <div class="fact-row"><div class="fact-ico">🌡️</div><div class="fact-txt"><strong>−40°</strong> is the only point where Celsius and Fahrenheit are exactly equal.</div></div>
+      <div class="fact-row"><div class="fact-ico">🔥</div><div class="fact-txt"><strong>Sun's core</strong> is about 15,000,000°C — hot enough to fuse hydrogen atoms.</div></div>
+      <div class="fact-row"><div class="fact-ico">🌍</div><div class="fact-txt"><strong>Hottest on Earth:</strong> 56.7°C (134°F) in Death Valley, California in 1913.</div></div>
+      <div class="fact-row"><div class="fact-ico">🧊</div><div class="fact-txt"><strong>Coldest on Earth:</strong> −89.2°C (−128.6°F) at Vostok Station, Antarctica in 1983.</div></div>
+    </div>
+  </div>
+  <div class="toast" id="toast"></div>
+  <script>
+    var cur='C',hist=[],lastRes=null,activePanel=null;
+    var SYM={C:'°C',F:'°F',K:'K'};
+    var NAME={C:'Celsius',F:'Fahrenheit',K:'Kelvin'};
+    var LBL={C:'ICE · Celsius',F:'FIRE · Fahrenheit',K:'PLASMA · Kelvin'};
+    var EMO={C:'❄️',F:'🔥',K:'🌌'};
+    var ACT={C:'ac',F:'af',K:'ak'};
+    var BC={C:'bc',F:'bf',K:'bk'};
+    var GC={C:'gc',F:'gf',K:'gk'};
+    var RC={C:'rc',F:'rf',K:'rk'};
+    var CC={C:'cc',F:'cf',K:'ck'};
+    function toggleMenu(){document.getElementById('dropdown').classList.toggle('open');}
+    function closeMenu(){document.getElementById('dropdown').classList.remove('open');}
+    function togglePanel(name){
+      closeMenu();
+      var map={formula:'formulaPanel',history:'histPanel',facts:'factsPanel'};
+      var pid=map[name];
+      if(activePanel===name){document.getElementById(pid).classList.remove('show');activePanel=null;}
+      else{
+        Object.values(map).forEach(function(id){document.getElementById(id).classList.remove('show');});
+        document.getElementById(pid).classList.add('show');
+        activePanel=name;
+        if(name==='history') renderHist();
+      }
+    }
+    function selectUnit(u){
+      cur=u;
+      ['C','F','K'].forEach(function(x){document.getElementById('btn'+x).className='ubtn'+(x===u?' '+ACT[x]:'');});
+      var i=document.getElementById('inp');
+      i.className='inp '+BC[u];i.placeholder='Enter '+NAME[u]+' value\u2026';
+      var b=document.getElementById('badge');b.textContent=SYM[u];b.className='badge '+GC[u];
+      hideRes();clearErr();lastRes=null;
+    }
+    function calc(v,from){
+      var n=parseFloat(v);if(isNaN(n)) return null;
+      var c=from==='C'?n:from==='F'?(n-32)*5/9:n-273.15;
+      return{C:from==='C'?n:parseFloat(c.toFixed(4)),F:from==='F'?n:parseFloat((c*9/5+32).toFixed(4)),K:from==='K'?n:parseFloat((c+273.15).toFixed(4))};
+    }
+    function doConvert(){
+      var val=document.getElementById('inp').value.trim();clearErr();
+      if(!val){showErr('Please enter a temperature value!');return;}
+      if(isNaN(parseFloat(val))||!/^-?\d*\.?\d+$/.test(val)){showErr('Invalid input! Enter a valid number.');return;}
+      var res=calc(val,cur);lastRes=res;
+      renderRes(res);addHist(val,res);
+      if(activePanel==='history') renderHist();
+    }
+    function renderRes(res){
+      var html='';
+      ['C','F','K'].forEach(function(u,i){
+        if(u===cur) return;
+        html+='<div class="rcard '+RC[u]+'" style="animation-delay:'+(i*0.08)+'s"><div class="r-unit '+CC[u]+'">'+LBL[u]+'</div><div class="r-top"><div class="r-val '+CC[u]+'">'+res[u]+'<span class="r-sym '+CC[u]+'">'+SYM[u]+'</span></div><div class="r-ico">'+EMO[u]+'</div></div></div>';
+      });
+      document.getElementById('rcards').innerHTML=html;
+      document.getElementById('results').classList.add('show');
+    }
+    function addHist(val,res){
+      var now=new Date();
+      var t=now.getHours().toString().padStart(2,'0')+':'+now.getMinutes().toString().padStart(2,'0');
+      hist.unshift({input:val+SYM[cur],from:cur,res:res,time:t});
+      if(hist.length>15) hist.pop();
+    }
+    function renderHist(){
+      var l=document.getElementById('hlist');
+      if(!hist.length){l.innerHTML='<div class="hp-empty">No conversions yet. Start converting! 🌡️</div>';return;}
+      l.innerHTML=hist.map(function(e,i){
+        var to=['C','F','K'].filter(function(u){return u!==e.from;}).map(function(u){return e.res[u]+SYM[u];}).join(' · ');
+        return '<div class="hp-item" onclick="loadHist('+i+')"><div class="hp-from">'+e.input+'</div><div class="hp-to">→ '+to+'</div><div class="hp-time">'+e.time+'</div></div>';
+      }).join('');
+    }
+    function loadHist(i){var e=hist[i];selectUnit(e.from);document.getElementById('inp').value=parseFloat(e.input);renderRes(e.res);lastRes=e.res;}
+    function clearHist(){hist=[];renderHist();hideRes();}
+    function copyResult(){
+      closeMenu();
+      if(!lastRes){showToast('⚠ Convert something first!');return;}
+      var txt=['C','F','K'].map(function(u){return lastRes[u]+SYM[u];}).join('  |  ');
+      navigator.clipboard.writeText(txt).then(function(){showToast('✓ Copied!');}).catch(function(){showToast('⚠ Copy failed');});
+    }
+    function hideRes(){document.getElementById('results').classList.remove('show');}
+    function doReset(){document.getElementById('inp').value='';hideRes();clearErr();lastRes=null;}
+    function showErr(m){var i=document.getElementById('inp'),e=document.getElementById('errmsg');i.classList.add('err');e.style.display='block';e.textContent='⚠ '+m;setTimeout(function(){i.classList.remove('err');},500);}
+    function clearErr(){document.getElementById('errmsg').style.display='none';document.getElementById('inp').classList.remove('err');}
+    function showToast(msg){var t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(function(){t.classList.remove('show');},2500);}
+    document.addEventListener('click',function(e){if(!e.target.closest('#dotsBtn')&&!e.target.closest('#dropdown')) closeMenu();});
+    document.addEventListener('DOMContentLoaded',function(){
+      document.getElementById('inp').addEventListener('keydown',function(e){if(e.key==='Enter') doConvert();});
+      document.getElementById('inp').addEventListener('input',clearErr);
+      var types=['fire','ice','plasma'];
+      for(var i=0;i<22;i++){
+        var p=document.createElement('div');var sz=(5+Math.random()*13)+'px';
+        p.className='particle '+types[i%3];
+        p.style.cssText='left:'+(Math.random()*100)+'%;width:'+sz+';height:'+sz+';animation:float '+(2.5+Math.random()*3)+'s '+(Math.random()*4)+'s ease-in infinite;';
+        document.body.appendChild(p);
+      }
+    });
+  </script>
+</body>
+</html>
